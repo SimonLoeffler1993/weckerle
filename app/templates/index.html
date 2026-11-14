@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ app_name }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+</head>
+<body>
+  <header>
+    <h1>⏰ {{ app_name }}</h1>
+    <p>PCs nach Zeitplan per Wake-on-LAN einschalten und per SSH ausschalten.</p>
+  </header>
+  <main>
+    <section>
+      <h2>Geräte</h2>
+      {% if devices %}
+        <ul>
+          {% for d in devices %}
+            <li><strong>{{ d.name }}</strong> · {{ d.host }} · {{ d.mac_address }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="muted">Noch keine Geräte angelegt. Die Geräteverwaltung kommt im nächsten Schritt.</p>
+      {% endif %}
+    </section>
+  </main>
+  <footer class="muted">Version {{ version }}</footer>
+</body>
+</html>

@@ -1,0 +1,6 @@
+:root { color-scheme: light dark; --fg: #1d1d1f; --bg: #f7f7f8; --muted: #6b6b70; --card: #fff; }
+@media (prefers-color-scheme: dark) { :root { --fg: #ececee; --bg: #18181b; --muted: #9a9aa0; --card: #232327; } }
+body { font-family: system-ui, sans-serif; margin: 0 auto; max-width: 860px; padding: 24px 16px; color: var(--fg); background: var(--bg); }
+section { background: var(--card); border-radius: 10px; padding: 16px 20px; margin-bottom: 16px; }
+.muted { color: var(--muted); }
+footer { margin-top: 24px; font-size: 0.85em; }
