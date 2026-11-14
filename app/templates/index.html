@@ -1,30 +1,63 @@
-<!doctype html>
-<html lang="de">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ app_name }}</title>
-  <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
-</head>
-<body>
-  <header>
-    <h1>⏰ {{ app_name }}</h1>
-    <p>PCs nach Zeitplan per Wake-on-LAN einschalten und per SSH ausschalten.</p>
-  </header>
-  <main>
-    <section>
-      <h2>Geräte</h2>
-      {% if devices %}
-        <ul>
-          {% for d in devices %}
-            <li><strong>{{ d.name }}</strong> · {{ d.host }} · {{ d.mac_address }}</li>
-          {% endfor %}
-        </ul>
-      {% else %}
-        <p class="muted">Noch keine Geräte angelegt. Die Geräteverwaltung kommt im nächsten Schritt.</p>
-      {% endif %}
-    </section>
-  </main>
-  <footer class="muted">Version {{ version }}</footer>
-</body>
-</html>
+{% extends "base.html" %}
+{% block content %}
+<div class="row-between">
+  <h1>Geräte</h1>
+  <a class="button primary" href="/devices/new">+ Gerät</a>
+</div>
+
+{% if not devices %}
+  <section>
+    <p>Noch keine Geräte angelegt.</p>
+    <p class="muted">Lege einen PC mit MAC-Adresse und IP an. Danach kannst du ihn per Knopf oder Zeitplan ein- und ausschalten.</p>
+  </section>
+{% endif %}
+
+<div class="cards">
+{% for d in devices %}
+  <section class="card">
+    <div class="row-between">
+      <h2>{{ d.name }}</h2>
+      <span class="status {{ 'on' if online[d.id] else 'off' }}" data-device="{{ d.id }}">{{ 'online' if online[d.id] else 'offline' }}</span>
+    </div>
+    <p class="muted small">{{ d.host }} · {{ d.mac_address }}</p>
+    {% set nr = next_runs[d.id] %}
+    <p class="small">
+      {% if nr %}Nächste Aktion: <strong>{{ action_labels[nr[1].action] }}</strong> {{ nr[0] | de_dt }}
+      {% else %}<span class="muted">Kein aktiver Zeitplan</span>{% endif %}
+    </p>
+    <div class="actions">
+      <form method="post" action="/devices/{{ d.id }}/wake" class="inline"><button class="primary">Einschalten</button></form>
+      <form method="post" action="/devices/{{ d.id }}/shutdown" class="inline" onsubmit="return confirm('{{ d.name }} jetzt herunterfahren?')"><button class="danger">Ausschalten</button></form>
+      <a class="button" href="/schedules/new?device_id={{ d.id }}">Zeitplan</a>
+      <a class="button" href="/devices/{{ d.id }}/edit">Bearbeiten</a>
+    </div>
+  </section>
+{% endfor %}
+</div>
+
+{% if recent %}
+<section>
+  <div class="row-between"><h2>Letzte Aktionen</h2><a href="/log">Alle anzeigen</a></div>
+  {% include "_log_table.html" with context %}
+</section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  async function refreshStatus() {
+    try {
+      const r = await fetch('/api/status', {credentials: 'same-origin'});
+      if (!r.ok) return;
+      const data = await r.json();
+      document.querySelectorAll('[data-device]').forEach(el => {
+        const on = data[el.dataset.device];
+        if (on === undefined) return;
+        el.className = 'status ' + (on ? 'on' : 'off');
+        el.textContent = on ? 'online' : 'offline';
+      });
+    } catch (e) {}
+  }
+  setInterval(refreshStatus, 15000);
+</script>
+{% endblock %}

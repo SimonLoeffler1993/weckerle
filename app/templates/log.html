@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Protokoll</h1>
+<section>
+  {% if entries %}{% include "_log_table.html" with context %}{% else %}<p class="muted">Noch keine Aktionen ausgeführt.</p>{% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ 'Neues Gerät' if is_new else 'Gerät bearbeiten' }}</h1>
+{% for e in errors %}<div class="flash error">{{ e }}</div>{% endfor %}
+<form method="post" class="stack">
+  <section>
+    <h2>Allgemein</h2>
+    <div class="grid">
+      <label>Name <input name="name" value="{{ device.name or '' }}" required maxlength="100"></label>
+      <label>Betriebssystem
+        <select name="os_type" id="os_type">
+          {% for key, label in [('linux','Linux'),('windows','Windows'),('macos','macOS')] %}
+            <option value="{{ key }}" {{ 'selected' if device.os_type == key }}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>IP-Adresse oder Hostname <input name="host" value="{{ device.host or '' }}" required placeholder="192.168.1.20"></label>
+      <label>MAC-Adresse <input name="mac_address" value="{{ device.mac_address or '' }}" required placeholder="AA:BB:CC:DD:EE:FF"></label>
+    </div>
+  </section>
+
+  <section>
+    <h2>Wake-on-LAN</h2>
+    <div class="grid">
+      <label>Broadcast-Adresse <input name="broadcast_address" value="{{ device.broadcast_address }}" placeholder="255.255.255.255"></label>
+      <label>Port <input name="wol_port" type="number" min="1" max="65535" value="{{ device.wol_port }}"></label>
+    </div>
+    <p class="muted small">Meist passt 255.255.255.255. Bei mehreren Netzwerken die Broadcast-Adresse des Ziel-Netzes angeben, z. B. 192.168.1.255.</p>
+  </section>
+
+  <section>
+    <h2>Ausschalten per SSH</h2>
+    <div class="grid">
+      <label>SSH-Benutzer <input name="ssh_user" value="{{ device.ssh_user or '' }}" autocomplete="off"></label>
+      <label>SSH-Port <input name="ssh_port" type="number" min="1" max="65535" value="{{ device.ssh_port }}"></label>
+      <label>Anmeldung
+        <select name="ssh_auth" id="ssh_auth">
+          <option value="key" {{ 'selected' if device.ssh_auth != 'password' }}>SSH-Schlüssel der App (empfohlen)</option>
+          <option value="password" {{ 'selected' if device.ssh_auth == 'password' }}>Passwort</option>
+        </select>
+      </label>
+      <label id="pw_field">SSH-Passwort
+        <input type="password" name="ssh_password" autocomplete="new-password"
+               placeholder="{{ 'gespeichert – leer lassen zum Beibehalten' if device.ssh_password_enc else '' }}">
+      </label>
+    </div>
+    <label>Befehl zum Herunterfahren <input name="shutdown_command" id="shutdown_command" value="{{ device.shutdown_command }}"></label>
+    <div id="key_hint" class="hint">
+      <p class="small">Füge diesen öffentlichen Schlüssel auf dem PC in <code>~/.ssh/authorized_keys</code> des SSH-Benutzers ein
+        (Windows: <code>C:\Users\&lt;Name&gt;\.ssh\authorized_keys</code>, bei Administratoren <code>C:\ProgramData\ssh\administrators_authorized_keys</code>):</p>
+      <pre class="key">{{ public_key }}</pre>
+    </div>
+    <p class="muted small">Linux: Damit <code>sudo -n shutdown</code> ohne Passwort klappt, in <code>sudo visudo</code> eine Zeile wie
+      <code>benutzer ALL=(root) NOPASSWD: /usr/sbin/shutdown</code> ergänzen.</p>
+  </section>
+
+  <div class="actions">
+    <button class="primary">Speichern</button>
+    <a class="button" href="/">Abbrechen</a>
+  </div>
+</form>
+
+{% if not is_new %}
+<form method="post" action="/devices/{{ device.id }}/delete" onsubmit="return confirm('Gerät und alle Zeitpläne löschen?')" class="danger-zone">
+  <button class="danger">Gerät löschen</button>
+</form>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const defaults = {{ os_defaults | tojson }};
+  const os = document.getElementById('os_type');
+  const cmd = document.getElementById('shutdown_command');
+  os.addEventListener('change', () => {
+    if (Object.values(defaults).includes(cmd.value) || !cmd.value) cmd.value = defaults[os.value];
+  });
+  const auth = document.getElementById('ssh_auth');
+  function toggleAuth() {
+    const pw = auth.value === 'password';
+    document.getElementById('pw_field').style.display = pw ? '' : 'none';
+    document.getElementById('key_hint').style.display = pw ? 'none' : '';
+  }
+  auth.addEventListener('change', toggleAuth); toggleAuth();
+</script>
+{% endblock %}

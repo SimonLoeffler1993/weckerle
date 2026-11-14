@@ -1,13 +1,15 @@
 services:
   weckerle:
     image: ghcr.io/simonloeffler1993/weckerle:latest
-    build: .
     container_name: weckerle
     # Host-Netzwerk ist nötig, damit Wake-on-LAN-Broadcasts das Heimnetz erreichen.
     network_mode: host
     environment:
       - PORT=8000
       - TZ=Europe/Berlin
+      # Optional: Zugang vorgeben, sonst wird er beim ersten Aufruf angelegt.
+      # - WECKERLE_ADMIN_USERNAME=admin
+      # - WECKERLE_ADMIN_PASSWORD=bitte-aendern
     volumes:
       - weckerle-data:/data
     restart: unless-stopped

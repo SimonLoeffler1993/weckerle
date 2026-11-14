@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ 'Neuer Zeitplan' if is_new else 'Zeitplan bearbeiten' }}</h1>
+{% for e in errors %}<div class="flash error">{{ e }}</div>{% endfor %}
+<form method="post" class="stack">
+  <section>
+    <div class="grid">
+      <label>Gerät
+        <select name="device_id" required>
+          <option value="">– auswählen –</option>
+          {% for d in devices %}
+            <option value="{{ d.id }}" {{ 'selected' if schedule.device_id == d.id }}>{{ d.name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Aktion
+        <select name="action">
+          <option value="wake" {{ 'selected' if schedule.action == 'wake' }}>Einschalten (Wake-on-LAN)</option>
+          <option value="shutdown" {{ 'selected' if schedule.action == 'shutdown' }}>Ausschalten (SSH)</option>
+        </select>
+      </label>
+      <label>Uhrzeit <input type="time" name="time" value="{{ schedule.time }}" required></label>
+    </div>
+    <fieldset>
+      <legend>Wochentage</legend>
+      <div class="days">
+        {% for d in weekdays %}
+          <label class="day"><input type="checkbox" name="weekdays" value="{{ d }}" {{ 'checked' if d in (schedule.weekdays or '').split(',') }}> {{ weekday_labels[d] }}</label>
+        {% endfor %}
+      </div>
+      <p class="small">
+        <a href="#" data-days="mon,tue,wed,thu,fri">Mo–Fr</a> ·
+        <a href="#" data-days="sat,sun">Wochenende</a> ·
+        <a href="#" data-days="mon,tue,wed,thu,fri,sat,sun">Täglich</a>
+      </p>
+    </fieldset>
+    <label class="check"><input type="checkbox" name="enabled" {{ 'checked' if schedule.enabled }}> Aktiv</label>
+  </section>
+  <div class="actions">
+    <button class="primary">Speichern</button>
+    <a class="button" href="/schedules">Abbrechen</a>
+  </div>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+  document.querySelectorAll('[data-days]').forEach(a => a.addEventListener('click', e => {
+    e.preventDefault();
+    const days = a.dataset.days.split(',');
+    document.querySelectorAll('input[name=weekdays]').forEach(cb => cb.checked = days.includes(cb.value));
+  }));
+</script>
+{% endblock %}

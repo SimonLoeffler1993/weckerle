@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Einstellungen</h1>
+<section>
+  <h2>SSH-Schlüssel der App</h2>
+  <p class="small">Diesen öffentlichen Schlüssel auf jedem PC in <code>authorized_keys</code> des SSH-Benutzers eintragen, damit Weckerle ihn ohne Passwort herunterfahren kann.</p>
+  <pre class="key">{{ public_key }}</pre>
+</section>
+<section>
+  <h2>Zeitzone</h2>
+  <p>Zeitpläne laufen in der Zeitzone <strong>{{ timezone }}</strong>. Ändern über die Umgebungsvariable <code>TZ</code>.</p>
+</section>
+<section class="narrow-section">
+  <h2>Passwort ändern</h2>
+  <form method="post" action="/settings/password" class="stack">
+    <label>Aktuelles Passwort <input type="password" name="current" required autocomplete="current-password"></label>
+    <label>Neues Passwort <input type="password" name="new" required minlength="8" autocomplete="new-password"></label>
+    <label>Neues Passwort wiederholen <input type="password" name="new2" required minlength="8" autocomplete="new-password"></label>
+    <button class="primary">Ändern</button>
+  </form>
+</section>
+{% endblock %}
