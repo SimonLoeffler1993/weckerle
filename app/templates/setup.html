@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="narrow">
+  <h1>Willkommen</h1>
+  <p class="muted">Lege den Zugang für die Weboberfläche an.</p>
+  <form method="post" class="stack">
+    <label>Benutzername <input name="username" value="admin" required autocomplete="username"></label>
+    <label>Passwort (mind. 8 Zeichen) <input type="password" name="password" required minlength="8" autocomplete="new-password"></label>
+    <label>Passwort wiederholen <input type="password" name="password2" required minlength="8" autocomplete="new-password"></label>
+    <button class="primary">Zugang anlegen</button>
+  </form>
+</section>
+{% endblock %}

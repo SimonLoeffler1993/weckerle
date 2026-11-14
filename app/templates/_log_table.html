@@ -1,0 +1,17 @@
+{% set rows = entries if entries is defined else recent %}
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Zeit</th><th>Gerät</th><th>Aktion</th><th>Auslöser</th><th>Ergebnis</th></tr></thead>
+  <tbody>
+  {% for e in rows %}
+    <tr>
+      <td class="nowrap">{{ e.created_at.strftime('%d.%m.%Y %H:%M:%S') }}</td>
+      <td>{{ e.device_name }}</td>
+      <td>{{ action_labels.get(e.action, e.action) }}</td>
+      <td>{{ e.trigger }}</td>
+      <td><span class="{{ 'ok-text' if e.success else 'error-text' }}">{{ '✔' if e.success else '✖' }}</span> {{ e.message }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>

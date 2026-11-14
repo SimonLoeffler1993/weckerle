@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ app_name }}{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/">⏰ {{ app_name }}</a>
+    {% if user %}
+    <nav>
+      <a href="/">Geräte</a>
+      <a href="/schedules">Zeitpläne</a>
+      <a href="/log">Protokoll</a>
+      <a href="/settings">Einstellungen</a>
+      <form method="post" action="/logout" class="inline"><button class="link">Abmelden</button></form>
+    </nav>
+    {% endif %}
+  </header>
+  <main>
+    {% for m in messages %}
+      <div class="flash {{ m.kind }}">{{ m.message }}</div>
+    {% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="muted">{{ app_name }} {{ version }}</footer>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row-between">
+  <h1>Zeitpläne</h1>
+  {% if has_devices %}<a class="button primary" href="/schedules/new">+ Zeitplan</a>{% endif %}
+</div>
+<section>
+{% if not has_devices %}
+  <p>Lege zuerst ein <a href="/devices/new">Gerät</a> an.</p>
+{% elif not schedules %}
+  <p class="muted">Noch keine Zeitpläne. Zum Beispiel: Mo–Fr um 07:00 einschalten, um 18:00 ausschalten.</p>
+{% else %}
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Gerät</th><th>Aktion</th><th>Uhrzeit</th><th>Tage</th><th>Nächste Ausführung</th><th></th></tr></thead>
+  <tbody>
+  {% for s in schedules %}
+    <tr class="{{ '' if s.enabled else 'disabled' }}">
+      <td>{{ s.device.name }}</td>
+      <td>{{ action_labels[s.action] }}</td>
+      <td>{{ s.time }}</td>
+      <td>{{ s.weekday_text }}</td>
+      <td class="nowrap">{% if next_runs[s.id] %}{{ next_runs[s.id] | de_dt }}{% else %}<span class="muted">pausiert</span>{% endif %}</td>
+      <td class="nowrap right">
+        <form method="post" action="/schedules/{{ s.id }}/toggle" class="inline"><button class="small">{{ 'Pausieren' if s.enabled else 'Aktivieren' }}</button></form>
+        <a class="button small" href="/schedules/{{ s.id }}/edit">Bearbeiten</a>
+        <form method="post" action="/schedules/{{ s.id }}/delete" class="inline" onsubmit="return confirm('Zeitplan löschen?')"><button class="small danger">Löschen</button></form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+</section>
+{% endblock %}
