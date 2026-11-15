@@ -69,3 +69,6 @@ th { color: var(--muted); font-weight: 600; }
 tr.disabled td { opacity: .55; }
 pre.key { white-space: pre-wrap; word-break: break-all; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-size: .82em; }
 code { font-size: .9em; }
+.command-row { display: grid; grid-template-columns: minmax(160px, 220px) 1fr; gap: 12px; }
+.command-row input { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .9em; }
+@media (max-width: 560px) { .command-row { grid-template-columns: 1fr; } }

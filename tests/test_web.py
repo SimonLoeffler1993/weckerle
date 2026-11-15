@@ -184,3 +184,27 @@ def test_change_password(auth_client):
 def test_api_status_requires_login(client):
     r = client.get("/api/status", follow_redirects=False)
     assert r.status_code == 303
+
+
+def test_device_form_command_templates(auth_client):
+    r = auth_client.get("/devices/new")
+    assert 'id="command_template"' in r.text
+    assert "Standby" in r.text and "Herunterfahren" in r.text
+    assert "sudo -n systemctl suspend" in r.text  # Vorlagen für das Skript
+
+    # Standby-Vorlage wird gespeichert und beim Bearbeiten wieder als Vorlage erkannt
+    auth_client.post("/devices/new", data={**DEVICE, "os_type": "windows",
+                                           "shutdown_command": "rundll32.exe powrprof.dll,SetSuspendState 0,1,0"})
+    with SessionLocal() as s:
+        d = s.query(Device).one()
+        assert d.shutdown_command == "rundll32.exe powrprof.dll,SetSuspendState 0,1,0"
+        device_id = d.id
+    r = auth_client.get(f"/devices/{device_id}/edit")
+    assert '<option value="standby" selected>' in r.text
+
+    # Eigener Befehl bleibt erhalten und wird als „Eigener Befehl“ angezeigt
+    auth_client.post(f"/devices/{device_id}/edit", data={**DEVICE, "shutdown_command": "systemctl hibernate"})
+    with SessionLocal() as s:
+        assert s.get(Device, device_id).shutdown_command == "systemctl hibernate"
+    r = auth_client.get(f"/devices/{device_id}/edit")
+    assert '<option value="custom" selected>' in r.text

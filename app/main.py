@@ -17,7 +17,9 @@ from starlette.middleware.sessions import SessionMiddleware
 from app import actions, config, scheduler, security, ssh, status, wol
 from app.db import get_session, init_db
 from app.models import (
+    COMMAND_TEMPLATES,
     OS_DEFAULT_SHUTDOWN,
+    OS_LABELS,
     WEEKDAY_LABELS,
     WEEKDAYS,
     ActionLog,
@@ -36,6 +38,8 @@ templates.env.globals.update(
     action_labels=actions.ACTION_LABELS,
     weekday_labels=WEEKDAY_LABELS,
     weekdays=WEEKDAYS,
+    os_labels=OS_LABELS,
+    command_templates=COMMAND_TEMPLATES,
 )
 
 _DE_DAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
@@ -274,7 +278,7 @@ def device_new(request: Request, _: str = Depends(require_user)):
         ssh_auth="key", shutdown_command=OS_DEFAULT_SHUTDOWN["linux"], ssh_user="",
     )
     return render(request, "device_form.html", device=device, is_new=True, errors=[],
-                  public_key=ssh.app_public_key(), os_defaults=OS_DEFAULT_SHUTDOWN)
+                  public_key=ssh.app_public_key())
 
 
 @app.post("/devices/new", response_class=HTMLResponse)
@@ -290,7 +294,7 @@ async def device_create(request: Request, session: Session = Depends(get_session
             errors.append("Es gibt schon ein Gerät mit diesem Namen.")
     if errors:
         return render(request, "device_form.html", device=device, is_new=True, errors=errors,
-                      public_key=ssh.app_public_key(), os_defaults=OS_DEFAULT_SHUTDOWN)
+                      public_key=ssh.app_public_key())
     flash(request, f"Gerät „{device.name}“ angelegt.")
     return redirect("/")
 
@@ -306,7 +310,7 @@ def _get_device(session: Session, device_id: int) -> Device:
 def device_edit(device_id: int, request: Request, session: Session = Depends(get_session), _: str = Depends(require_user)):
     device = _get_device(session, device_id)
     return render(request, "device_form.html", device=device, is_new=False, errors=[],
-                  public_key=ssh.app_public_key(), os_defaults=OS_DEFAULT_SHUTDOWN)
+                  public_key=ssh.app_public_key())
 
 
 @app.post("/devices/{device_id}/edit", response_class=HTMLResponse)
@@ -322,7 +326,7 @@ async def device_update(device_id: int, request: Request, session: Session = Dep
     if errors:
         session.expunge(device)
         return render(request, "device_form.html", device=device, is_new=False, errors=errors,
-                      public_key=ssh.app_public_key(), os_defaults=OS_DEFAULT_SHUTDOWN)
+                      public_key=ssh.app_public_key())
     flash(request, f"Gerät „{device.name}“ gespeichert.")
     return redirect("/")
 

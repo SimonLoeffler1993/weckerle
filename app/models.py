@@ -21,11 +21,27 @@ def local_now() -> datetime:
 WEEKDAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 WEEKDAY_LABELS = {"mon": "Mo", "tue": "Di", "wed": "Mi", "thu": "Do", "fri": "Fr", "sat": "Sa", "sun": "So"}
 
-OS_DEFAULT_SHUTDOWN = {
-    "linux": "sudo -n shutdown -h now",
-    "windows": "shutdown /s /t 0",
-    "macos": "sudo -n shutdown -h now",
+OS_LABELS = {"linux": "Linux", "windows": "Windows", "macos": "macOS"}
+
+# Vorlagen für den SSH-Befehl zum Ausschalten, je Betriebssystem.
+# Der erste Eintrag ist der Standard (Herunterfahren).
+COMMAND_TEMPLATES = {
+    "linux": [
+        ("shutdown", "Herunterfahren", "sudo -n shutdown -h now"),
+        ("standby", "Standby", "sudo -n systemctl suspend"),
+    ],
+    "windows": [
+        ("shutdown", "Herunterfahren", "shutdown /s /t 0"),
+        ("standby", "Standby", "rundll32.exe powrprof.dll,SetSuspendState 0,1,0"),
+    ],
+    "macos": [
+        ("shutdown", "Herunterfahren", "sudo -n shutdown -h now"),
+        ("standby", "Standby", "pmset sleepnow"),
+    ],
 }
+
+OS_DEFAULT_SHUTDOWN = {os_type: templates[0][2] for os_type, templates in COMMAND_TEMPLATES.items()}
+
 
 
 class Setting(Base):
