@@ -9,7 +9,7 @@
       <label>Name <input name="name" value="{{ device.name or '' }}" required maxlength="100"></label>
       <label>Betriebssystem
         <select name="os_type" id="os_type">
-          {% for key, label in [('linux','Linux'),('windows','Windows'),('macos','macOS')] %}
+          {% for key, label in os_labels.items() %}
             <option value="{{ key }}" {{ 'selected' if device.os_type == key }}>{{ label }}</option>
           {% endfor %}
         </select>
@@ -44,14 +44,30 @@
                placeholder="{{ 'gespeichert – leer lassen zum Beibehalten' if device.ssh_password_enc else '' }}">
       </label>
     </div>
-    <label>Befehl zum Herunterfahren <input name="shutdown_command" id="shutdown_command" value="{{ device.shutdown_command }}"></label>
+    {% set os_type = device.os_type if device.os_type in command_templates else 'linux' %}
+    <div class="command-row">
+      <label>Vorlage
+        <select id="command_template" aria-describedby="template_hint">
+          {% for key, label, cmd in command_templates[os_type] %}
+            <option value="{{ key }}" {{ 'selected' if cmd == device.shutdown_command }}>{{ label }}</option>
+          {% endfor %}
+          <option value="custom" {{ 'selected' if device.shutdown_command not in command_templates[os_type] | map(attribute=2) }}>Eigener Befehl</option>
+        </select>
+      </label>
+      <label>SSH-Befehl zum Ausschalten
+        <input name="shutdown_command" id="shutdown_command" value="{{ device.shutdown_command }}" maxlength="255" spellcheck="false">
+      </label>
+    </div>
+    <p class="muted small" id="template_hint">Eine Vorlage füllt den Befehl aus, er bleibt danach frei änderbar. Leer lassen setzt „Herunterfahren“.</p>
     <div id="key_hint" class="hint">
       <p class="small">Füge diesen öffentlichen Schlüssel auf dem PC in <code>~/.ssh/authorized_keys</code> des SSH-Benutzers ein
         (Windows: <code>C:\Users\&lt;Name&gt;\.ssh\authorized_keys</code>, bei Administratoren <code>C:\ProgramData\ssh\administrators_authorized_keys</code>):</p>
       <pre class="key">{{ public_key }}</pre>
     </div>
-    <p class="muted small">Linux: Damit <code>sudo -n shutdown</code> ohne Passwort klappt, in <code>sudo visudo</code> eine Zeile wie
-      <code>benutzer ALL=(root) NOPASSWD: /usr/sbin/shutdown</code> ergänzen.</p>
+    <p class="muted small">Linux: Damit <code>sudo -n</code> ohne Passwort klappt, in <code>sudo visudo</code> eine Zeile wie
+      <code>benutzer ALL=(root) NOPASSWD: /usr/sbin/shutdown, /usr/bin/systemctl suspend</code> ergänzen.
+      Windows: Ist der Ruhezustand aktiviert, geht <code>SetSuspendState</code> in den Ruhezustand statt in Standby;
+      abschalten mit <code>powercfg /hibernate off</code>.</p>
   </section>
 
   <div class="actions">
@@ -69,11 +85,37 @@
 
 {% block scripts %}
 <script>
-  const defaults = {{ os_defaults | tojson }};
+  const templates = {{ command_templates | tojson }};
   const os = document.getElementById('os_type');
   const cmd = document.getElementById('shutdown_command');
+  const tpl = document.getElementById('command_template');
+
+  function templateKeyFor(osType, command) {
+    const hit = (templates[osType] || []).find(t => t[2] === command);
+    return hit ? hit[0] : null;
+  }
+  function fillTemplateOptions(selected) {
+    tpl.innerHTML = '';
+    for (const [key, label] of templates[os.value] || []) tpl.add(new Option(label, key));
+    tpl.add(new Option('Eigener Befehl', 'custom'));
+    tpl.value = selected || 'custom';
+  }
+  tpl.addEventListener('change', () => {
+    const hit = (templates[os.value] || []).find(t => t[0] === tpl.value);
+    if (hit) cmd.value = hit[2];
+    else cmd.focus();
+  });
+  cmd.addEventListener('input', () => { tpl.value = templateKeyFor(os.value, cmd.value) || 'custom'; });
+  let lastOs = os.value;
   os.addEventListener('change', () => {
-    if (Object.values(defaults).includes(cmd.value) || !cmd.value) cmd.value = defaults[os.value];
+    // Passt der Befehl zu einer Vorlage des alten Systems, dieselbe Vorlage des neuen nehmen.
+    const key = cmd.value ? templateKeyFor(lastOs, cmd.value) : 'shutdown';
+    lastOs = os.value;
+    if (key) {
+      const hit = (templates[os.value] || []).find(t => t[0] === key);
+      if (hit) cmd.value = hit[2];
+    }
+    fillTemplateOptions(templateKeyFor(os.value, cmd.value));
   });
   const auth = document.getElementById('ssh_auth');
   function toggleAuth() {

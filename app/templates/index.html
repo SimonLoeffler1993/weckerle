@@ -27,7 +27,7 @@
     </p>
     <div class="actions">
       <form method="post" action="/devices/{{ d.id }}/wake" class="inline"><button class="primary">Einschalten</button></form>
-      <form method="post" action="/devices/{{ d.id }}/shutdown" class="inline" onsubmit="return confirm('{{ d.name }} jetzt herunterfahren?')"><button class="danger">Ausschalten</button></form>
+      <form method="post" action="/devices/{{ d.id }}/shutdown" class="inline" onsubmit="return confirm('{{ d.name }} jetzt ausschalten?')"><button class="danger">Ausschalten</button></form>
       <a class="button" href="/schedules/new?device_id={{ d.id }}">Zeitplan</a>
       <a class="button" href="/devices/{{ d.id }}/edit">Bearbeiten</a>
     </div>

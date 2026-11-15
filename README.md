@@ -48,10 +48,19 @@ Energieverwaltung und „Wake on Magic Packet“). WoL klappt in der Regel nur p
    (Linux: `~/.ssh/authorized_keys`; Windows-Administratoren:
    `C:\ProgramData\ssh\administrators_authorized_keys`). Alternativ ein Passwort hinterlegen.
 3. Linux: Damit `sudo -n shutdown -h now` ohne Passwort klappt, per `sudo visudo` ergänzen:
-   `benutzer ALL=(root) NOPASSWD: /usr/sbin/shutdown`
+   `benutzer ALL=(root) NOPASSWD: /usr/sbin/shutdown, /usr/bin/systemctl suspend`
 
-Der Befehl zum Herunterfahren ist pro Gerät änderbar (Standard Linux/macOS:
-`sudo -n shutdown -h now`, Windows: `shutdown /s /t 0`).
+Der SSH-Befehl zum Ausschalten ist pro Gerät frei änderbar. Für jedes Betriebssystem gibt es
+Vorlagen, die den Befehl per Auswahl ausfüllen:
+
+| | Herunterfahren (Standard) | Standby |
+|---|---|---|
+| Linux | `sudo -n shutdown -h now` | `sudo -n systemctl suspend` |
+| Windows | `shutdown /s /t 0` | `rundll32.exe powrprof.dll,SetSuspendState 0,1,0` |
+| macOS | `sudo -n shutdown -h now` | `pmset sleepnow` |
+
+Windows: Ist der Ruhezustand aktiviert, geht `SetSuspendState` in den Ruhezustand statt in Standby
+(abschalten mit `powercfg /hibernate off`).
 
 ## Konfiguration
 
